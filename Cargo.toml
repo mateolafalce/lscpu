@@ -1,7 +1,11 @@
 [package]
 name = "lscpu"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+license = "GPL-3.0"
+description = "Implementation of lscpu in rust"
+repository = "https://github.com/mateolafalce/lscpu"
+authors = ["Mateo Lafalce <mateolafalce@protonmail.com>"]
 
 [dependencies]
 
