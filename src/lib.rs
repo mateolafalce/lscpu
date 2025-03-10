@@ -1,45 +1,125 @@
+extern crate alloc;
+use paste::paste;
+
+use alloc::string::String;
 use core::{arch::asm, fmt::Write};
 
-pub fn lscpu() -> String {
-    let mut output = String::new();
-    output.push_str(&format!(
-        "Architecture:             {}\n",
-        get_cpu_architecture()
-    ));
-    output.push_str(&format!(
-        "  CPU op-mode(s):         {}\n",
-        get_cpu_op_modes()
-    ));
-    output.push_str(&format!(
-        "  Address sizes:          {}\n",
-        get_address_sizes()
-    ));
-    output.push_str(&format!("  Byte Order:             {}\n", get_byte_order()));
-    output.push_str(&format!("CPU(s):                   {}\n", get_cpu_count()));
-    output.push_str(&format!(
-        "  On-line CPU(s) list:    0,{}\n",
-        get_on_line_cpu()
-    ));
-    output.push_str(&format!("Vendor ID:                {}\n", get_vendor_id()));
-    output.push_str(&format!("  Model name:             {}\n", get_model_name()));
-    output.push_str(&format!("    CPU family:           {}\n", get_cpu_family()));
-    output.push_str(&format!("    Model:                {}\n", get_cpu_model()));
-    output.push_str(&format!(
-        "    Thread(s) per core:   {}\n",
-        get_threads_per_core()
-    ));
-    output.push_str(&format!(
-        "    Core(s) per socket:   {}\n",
-        get_cores_per_socket()
-    ));
-    output.push_str(&format!("    Socket(s):            {}\n", get_sockets()));
-    output.push_str(&format!("    Stepping:             {}\n", get_stepping()));
-    output.push_str(&format!(
-        "    Frequency boost:      {}\n",
-        get_boost_enabled()
-    ));
-    output
+pub struct Cpu {
+    pub architecture: &'static str,
+    pub cpu_op_modes: &'static str,
+    pub address_sizes: String,
+    pub byte_order: &'static str,
+    pub cpu_count: u32,
+    pub on_line_cpu: u32,
+    pub vendor_id: String,
+    pub model_name: String,
+    pub cpu_family: u32,
+    pub cpu_model: u32,
+    pub threads_per_core: u32,
+    pub cores_per_socket: u32,
+    pub sockets: u32,
+    pub stepping: u32,
+    pub boost_enabled: &'static str,
 }
+
+impl Cpu {
+    pub fn new() -> Self {
+        Cpu {
+            architecture: get_cpu_architecture(),
+            cpu_op_modes: get_cpu_op_modes(),
+            address_sizes: get_address_sizes(),
+            byte_order: get_byte_order(),
+            cpu_count: get_cpu_count(),
+            on_line_cpu: get_on_line_cpu(),
+            vendor_id: get_vendor_id(),
+            model_name: get_model_name(),
+            cpu_family: get_cpu_family(),
+            cpu_model: get_cpu_model(),
+            threads_per_core: get_threads_per_core(),
+            cores_per_socket: get_cores_per_socket(),
+            sockets: get_sockets(),
+            stepping: get_stepping(),
+            boost_enabled: get_boost_enabled(),
+        }
+    }
+}
+
+impl Default for Cpu {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl core::fmt::Display for Cpu {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(
+            f,
+            "Architecture:             {}\n\
+             CPU op-mode(s):           {}\n\
+             Address sizes:            {}\n\
+             Byte Order:               {}\n\
+             CPU(s):                   {}\n\
+             On-line CPU(s) list:      0,{}\n\
+             Vendor ID:                {}\n\
+             Model name:               {}\n\
+             CPU family:               {}\n\
+             Model:                    {}\n\
+             Thread(s) per core:       {}\n\
+             Core(s) per socket:       {}\n\
+             Socket(s):                {}\n\
+             Stepping:                 {}\n\
+             Frequency boost:          {}\n
+            ",
+            self.architecture,
+            self.cpu_op_modes,
+            self.address_sizes,
+            self.byte_order,
+            self.cpu_count,
+            self.on_line_cpu,
+            self.vendor_id,
+            self.model_name,
+            self.cpu_family,
+            self.cpu_model,
+            self.threads_per_core,
+            self.cores_per_socket,
+            self.sockets,
+            self.stepping,
+            self.boost_enabled
+        )
+    }
+}
+
+macro_rules! generate_getters {
+    ($struct_name:ident, $( $field:ident : $field_type:ty ),* ) => {
+        impl $struct_name {
+            $(
+                paste! {
+                    pub fn [<get_ $field>](&self) -> $field_type {
+                        self.$field.clone()
+                    }
+                }
+            )*
+        }
+    };
+}
+
+generate_getters!(Cpu,
+    architecture: &'static str,
+    cpu_op_modes: &'static str,
+    address_sizes: String,
+    byte_order: &'static str,
+    cpu_count: u32,
+    on_line_cpu: u32,
+    vendor_id: String,
+    model_name: String,
+    cpu_family: u32,
+    cpu_model: u32,
+    threads_per_core: u32,
+    cores_per_socket: u32,
+    sockets: u32,
+    stepping: u32,
+    boost_enabled: &'static str
+);
 
 fn get_cpu_architecture() -> &'static str {
     let mut cpuid_info: [u32; 4] = [0; 4];

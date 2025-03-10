@@ -10,12 +10,24 @@ cargo run --example std
 
 This code can be runned also in a `no-std` environment but you will need to figure out how to print the String :)
 
-## Preview
+## Cpu Data:
 
 ```rust
-use lscpu::lscpu;
-
-fn main() {
-    println!("{}", lscpu());
+pub struct Cpu {
+    pub architecture: &'static str,
+    pub cpu_op_modes: &'static str,
+    pub address_sizes: String,
+    pub byte_order: &'static str,
+    pub cpu_count: u32,
+    pub on_line_cpu: u32,
+    pub vendor_id: String,
+    pub model_name: String,
+    pub cpu_family: u32,
+    pub cpu_model: u32,
+    pub threads_per_core: u32,
+    pub cores_per_socket: u32,
+    pub sockets: u32,
+    pub stepping: u32,
+    pub boost_enabled: &'static str,
 }
 ```
