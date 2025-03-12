@@ -1,9 +1,8 @@
 extern crate alloc;
 use paste::paste;
 
-use alloc::string::String;
-use core::write;
-use core::{arch::asm, default::Default, fmt::Write};
+use alloc::string::{String, ToString};
+use core::{arch::asm, default::Default, fmt::Write, write};
 
 pub struct Cpu {
     pub architecture: &'static str,
