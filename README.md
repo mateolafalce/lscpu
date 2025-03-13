@@ -24,6 +24,7 @@ pub struct Cpu {
     pub model_name: String,
     pub cpu_family: u32,
     pub cpu_model: u32,
+    pub is_hybrid: &'static str,
     pub threads_per_core: u32,
     pub cores_per_socket: u32,
     pub sockets: u32,
