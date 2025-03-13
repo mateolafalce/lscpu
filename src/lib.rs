@@ -17,6 +17,7 @@ pub struct Cpu {
     pub model_name: String,
     pub cpu_family: u32,
     pub cpu_model: u32,
+    pub is_hybrid: &'static str,
     pub threads_per_core: u32,
     pub cores_per_socket: u32,
     pub sockets: u32,
@@ -42,6 +43,7 @@ impl Cpu {
             sockets: get_sockets(),
             stepping: get_stepping(),
             boost_enabled: get_boost_enabled(),
+            is_hybrid: get_hybrid_flag(),
         }
     }
 }
@@ -66,6 +68,7 @@ impl core::fmt::Display for Cpu {
              Model name:               {}\n\
              CPU family:               {}\n\
              Model:                    {}\n\
+             Is hybrid:                {}\n\
              Thread(s) per core:       {}\n\
              Core(s) per socket:       {}\n\
              Socket(s):                {}\n\
@@ -82,6 +85,7 @@ impl core::fmt::Display for Cpu {
             self.model_name,
             self.cpu_family,
             self.cpu_model,
+            self.is_hybrid,
             self.threads_per_core,
             self.cores_per_socket,
             self.sockets,
@@ -116,6 +120,7 @@ generate_getters!(Cpu,
     model_name: String,
     cpu_family: u32,
     cpu_model: u32,
+    is_hybrid: &'static str,
     threads_per_core: u32,
     cores_per_socket: u32,
     sockets: u32,
@@ -673,6 +678,24 @@ fn get_boost_enabled() -> &'static str {
         match (ebx as u64 & (1 << 38)) != 0 {
             true => "disabled",
             false => "enabled",
+        }
+    }
+}
+
+fn get_hybrid_flag() -> &'static str {
+    unsafe {
+        let edx: u32;
+
+        asm!(
+            "cpuid",
+            inout("eax") 0x07 => _,
+            inout("ecx") 0 => _,
+            out("edx") edx,
+        );
+
+        match (edx & (1 << 15)) != 0 {
+            true => "hybryd",
+            false => "no",
         }
     }
 }
