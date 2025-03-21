@@ -8,11 +8,11 @@
 //! ```
 //! cargo run --example std
 //! ```
-//! 
+//!
 //! This code can be runned also in a `no-std` environment.
-//! 
+//!
 //! ## Cpu Data:
-//! 
+//!
 //! ```rust
 //! pub struct Cpu {
 //!     pub architecture: &'static str,
