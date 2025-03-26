@@ -1,40 +1,3 @@
-//!
-//! # lscpu
-//!
-//! Implementation of [lscpu](https://www.man7.org/linux/man-pages/man1/lscpu.1.html) in rust
-//!
-//! ## Run a std example
-//!
-//! ```
-//! cargo run --example std
-//! ```
-//!
-//! This code can be runned also in a `no-std` environment.
-//!
-//! ## Cpu Data:
-//!
-//! ```rust
-//! pub struct Cpu {
-//!     pub architecture: &'static str,
-//!     pub cpu_op_modes: &'static str,
-//!     pub address_sizes: String,
-//!     pub byte_order: &'static str,
-//!     pub cpu_count: u32,
-//!     pub on_line_cpu: u32,
-//!     pub vendor_id: String,
-//!     pub model_name: String,
-//!     pub cpu_family: u32,
-//!     pub cpu_model: u32,
-//!     pub is_hybrid: &'static str,
-//!     pub threads_per_core: u32,
-//!     pub cores_per_socket: u32,
-//!     pub sockets: u32,
-//!     pub stepping: u32,
-//!    pub boost_enabled: &'static str,
-//! }
-//! ```
-//!
-
 #![no_std]
 
 extern crate alloc;
@@ -331,6 +294,7 @@ fn get_cpu_count() -> u32 {
     1
 }
 
+
 fn get_on_line_cpu() -> u32 {
     let eax: u32 = 1;
     let mut _ebx: u32 = 0;
@@ -350,31 +314,29 @@ fn get_on_line_cpu() -> u32 {
 }
 
 pub fn get_vendor_id() -> String {
-    let mut _eax: u32 = 0;
-    let mut _ecx: u32 = 0;
-    let mut _edx: u32 = 0;
+    let mut _eax: u32;
+    let mut ebx: u32;
+    let mut ecx: u32;
+    let mut edx: u32;
 
     unsafe {
         asm!(
             "cpuid",
-            in("eax") 0,
-            lateout("eax") _eax,
-            lateout("ecx") _ecx,
-            lateout("edx") _edx,
+            inout("eax") 0 => _eax,
+            lateout("ecx") ecx,
+            lateout("edx") edx,
             options(nostack, nomem, preserves_flags),
         );
 
         asm!(
             "mov eax, ebx",
-            out("eax") _eax,
+            out("eax") ebx,
             options(nostack, nomem, preserves_flags),
         );
     }
 
     let mut vendor_id = [0u8; 12];
-    vendor_id[0..4].copy_from_slice(&_eax.to_le_bytes());
-    vendor_id[4..8].copy_from_slice(&_edx.to_le_bytes());
-    vendor_id[8..12].copy_from_slice(&_ecx.to_le_bytes());
+    vendor_id.copy_from_slice(&[ebx, edx, ecx].map(|x| x.to_le_bytes()).concat());
 
     String::from_utf8(vendor_id.to_vec()).unwrap_or("Unknown".to_string())
 }
@@ -383,72 +345,25 @@ pub fn get_model_name() -> String {
     let mut model_name = [0u8; 48];
     let mut cpuid_info: [u32; 4] = [0; 4];
 
-    unsafe {
-        asm!(
-            "cpuid",
-            inout("eax") 0x80000002u32 as i32 => cpuid_info[0],
-            lateout("ecx") cpuid_info[2],
-            lateout("edx") cpuid_info[3],
-            options(nostack, nomem, preserves_flags),
-        );
-    }
+    for i in 0..3 {
+        unsafe {
+            asm!(
+                "cpuid",
+                inout("eax") (0x80000002u32+i as u32) as i32 => cpuid_info[0],
+                out("ecx") cpuid_info[2],
+                out("edx") cpuid_info[3],
+                options(nostack, nomem, preserves_flags),
+            );
+            asm!(
+                "mov eax, ebx",
+                out("eax") cpuid_info[1],
+                options(nostack, nomem, preserves_flags),
+            );
 
-    unsafe {
-        asm!(
-            "mov eax, ebx",
-            out("eax") cpuid_info[1],
-            options(nostack, nomem, preserves_flags),
-        );
+            model_name[i * 16..(i + 1) * 16]
+                .copy_from_slice(&cpuid_info.map(|x| x.to_le_bytes()).concat());
+        }
     }
-
-    model_name[0..4].copy_from_slice(&cpuid_info[0].to_le_bytes());
-    model_name[4..8].copy_from_slice(&cpuid_info[1].to_le_bytes());
-    model_name[8..12].copy_from_slice(&cpuid_info[2].to_le_bytes());
-    model_name[12..16].copy_from_slice(&cpuid_info[3].to_le_bytes());
-
-    unsafe {
-        asm!(
-            "cpuid",
-            inout("eax") 0x80000003u32 as i32 => cpuid_info[0],
-            lateout("ecx") cpuid_info[2],
-            lateout("edx") cpuid_info[3],
-            options(nostack, nomem, preserves_flags),
-        );
-    }
-
-    unsafe {
-        asm!(
-            "mov eax, ebx",
-            out("eax") cpuid_info[1],
-            options(nostack, nomem, preserves_flags),
-        );
-    }
-
-    model_name[16..20].copy_from_slice(&cpuid_info[0].to_le_bytes());
-    model_name[20..24].copy_from_slice(&cpuid_info[1].to_le_bytes());
-    model_name[24..28].copy_from_slice(&cpuid_info[2].to_le_bytes());
-    model_name[28..32].copy_from_slice(&cpuid_info[3].to_le_bytes());
-
-    unsafe {
-        asm!(
-            "cpuid",
-            inout("eax") 0x80000004u32 as i32 => cpuid_info[0],
-            lateout("ecx") cpuid_info[2],
-            lateout("edx") cpuid_info[3],
-            options(nostack, nomem, preserves_flags),
-        );
-    }
-    unsafe {
-        asm!(
-            "mov eax, ebx",
-            out("eax") cpuid_info[1],
-            options(nostack, nomem, preserves_flags),
-        );
-    }
-    model_name[32..36].copy_from_slice(&cpuid_info[0].to_le_bytes());
-    model_name[36..40].copy_from_slice(&cpuid_info[1].to_le_bytes());
-    model_name[40..44].copy_from_slice(&cpuid_info[2].to_le_bytes());
-    model_name[44..48].copy_from_slice(&cpuid_info[3].to_le_bytes());
 
     String::from_utf8(model_name.to_vec()).unwrap_or("Unknown".to_string())
 }
@@ -731,7 +646,7 @@ fn get_hybrid_flag() -> &'static str {
         );
 
         match (edx & (1 << 15)) != 0 {
-            true => "hybryd",
+            true => "hybrid",
             false => "no",
         }
     }
