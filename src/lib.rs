@@ -14,23 +14,40 @@
 //! ## Cpu Data:
 //!
 //! ```rust
+//! /// Represents the main CPU information obtained via CPUID instructions.
 //! pub struct Cpu {
+//!     /// Detected architecture (e.g., "x86_64").
 //!     pub architecture: &'static str,
+//!     /// Supported CPU operation modes (e.g., "32-bit, 64-bit").
 //!     pub cpu_op_modes: &'static str,
+//!     /// Physical and virtual address sizes.
 //!     pub address_sizes: String,
+//!     /// CPU byte order ("Little Endian" or "Big Endian").
 //!     pub byte_order: &'static str,
+//!     /// Total number of logical CPUs detected.
 //!     pub cpu_count: u32,
+//!     /// Number of online CPUs detected.
 //!     pub on_line_cpu: u32,
+//!     /// CPU vendor identifier.
 //!     pub vendor_id: String,
+//!     /// CPU model name.
 //!     pub model_name: String,
+//!     /// CPU family.
 //!     pub cpu_family: u32,
+//!     /// CPU model.
 //!     pub cpu_model: u32,
+//!     /// Indicates if the CPU is hybrid.
 //!     pub is_hybrid: &'static str,
+//!     /// Threads per core.
 //!     pub threads_per_core: u32,
+//!     /// Cores per socket.
 //!     pub cores_per_socket: u32,
+//!     /// Number of sockets detected.
 //!     pub sockets: u32,
+//!     /// CPU stepping.
 //!     pub stepping: u32,
-//!    pub boost_enabled: &'static str,
+//!     /// Indicates if frequency boost is enabled.
+//!     pub boost_enabled: &'static str,
 //! }
 //! ```
 //!
@@ -42,26 +59,44 @@ use paste::paste;
 use alloc::string::{String, ToString};
 use core::{arch::asm, clone::Clone, default::Default, fmt::Write, write};
 
+/// Represents the main CPU information obtained via CPUID instructions.
 pub struct Cpu {
+    /// Detected architecture (e.g., "x86_64").
     pub architecture: &'static str,
+    /// Supported CPU operation modes (e.g., "32-bit, 64-bit").
     pub cpu_op_modes: &'static str,
+    /// Physical and virtual address sizes.
     pub address_sizes: String,
+    /// CPU byte order ("Little Endian" or "Big Endian").
     pub byte_order: &'static str,
+    /// Total number of logical CPUs detected.
     pub cpu_count: u32,
+    /// Number of online CPUs detected.
     pub on_line_cpu: u32,
+    /// CPU vendor identifier.
     pub vendor_id: String,
+    /// CPU model name.
     pub model_name: String,
+    /// CPU family.
     pub cpu_family: u32,
+    /// CPU model.
     pub cpu_model: u32,
+    /// Indicates if the CPU is hybrid.
     pub is_hybrid: &'static str,
+    /// Threads per core.
     pub threads_per_core: u32,
+    /// Cores per socket.
     pub cores_per_socket: u32,
+    /// Number of sockets detected.
     pub sockets: u32,
+    /// CPU stepping.
     pub stepping: u32,
+    /// Indicates if frequency boost is enabled.
     pub boost_enabled: &'static str,
 }
 
 impl Cpu {
+    /// Creates a new [`Cpu`] instance with all fields detected from the system.
     pub fn new() -> Self {
         Cpu {
             architecture: get_cpu_architecture(),
@@ -85,12 +120,14 @@ impl Cpu {
 }
 
 impl Default for Cpu {
+    /// Creates a default [`Cpu`] instance (equivalent to [`Cpu::new`]).
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl core::fmt::Display for Cpu {
+    /// Formats the CPU information in a human-readable way.
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(
             f,
@@ -164,7 +201,8 @@ generate_getters!(Cpu,
     boost_enabled: &'static str
 );
 
-fn get_cpu_architecture() -> &'static str {
+/// Returns the detected CPU architecture (e.g., "x86_64") using CPUID.
+pub fn get_cpu_architecture() -> &'static str {
     let mut cpuid_info: [u32; 4] = [0; 4];
     unsafe {
         asm!(
@@ -192,7 +230,8 @@ fn get_cpu_architecture() -> &'static str {
     }
 }
 
-fn get_cpu_op_modes() -> &'static str {
+/// Returns the supported CPU operation modes (e.g., "32-bit, 64-bit").
+pub fn get_cpu_op_modes() -> &'static str {
     let mut cpuid_info: [u32; 4] = [0; 4];
 
     unsafe {
@@ -224,7 +263,8 @@ fn get_cpu_op_modes() -> &'static str {
     }
 }
 
-fn get_byte_order() -> &'static str {
+/// Returns the CPU byte order ("Little Endian" or "Big Endian").
+pub fn get_byte_order() -> &'static str {
     let value: u16 = 0x0001;
     let bytes = value.to_ne_bytes();
     if bytes[0] == 0x01 {
@@ -234,7 +274,8 @@ fn get_byte_order() -> &'static str {
     }
 }
 
-fn get_address_sizes() -> String {
+/// Returns the physical and virtual address sizes of the CPU.
+pub fn get_address_sizes() -> String {
     let mut cpuid_info: [u32; 4] = [0; 4];
     unsafe {
         asm!(
@@ -256,7 +297,8 @@ fn get_address_sizes() -> String {
     result
 }
 
-fn get_cpu_count() -> u32 {
+/// Returns the total number of logical CPUs detected.
+pub fn get_cpu_count() -> u32 {
     let mut _eax: u32;
     let mut _ebx: u32;
     let mut _ecx: u32;
@@ -330,7 +372,8 @@ fn get_cpu_count() -> u32 {
     1
 }
 
-fn get_on_line_cpu() -> u32 {
+/// Returns the number of online CPUs detected.
+pub fn get_on_line_cpu() -> u32 {
     let eax: u32 = 1;
     let mut _ebx: u32 = 0;
     let mut _ecx: u32 = 0;
@@ -348,6 +391,7 @@ fn get_on_line_cpu() -> u32 {
     eax
 }
 
+/// Returns the CPU vendor identifier as a string.
 pub fn get_vendor_id() -> String {
     let mut _eax: u32;
     let mut ebx: u32;
@@ -376,6 +420,7 @@ pub fn get_vendor_id() -> String {
     String::from_utf8(vendor_id.to_vec()).unwrap_or("Unknown".to_string())
 }
 
+/// Returns the CPU model name as a string.
 pub fn get_model_name() -> String {
     let mut model_name = [0u8; 48];
     let mut cpuid_info: [u32; 4] = [0; 4];
@@ -403,7 +448,8 @@ pub fn get_model_name() -> String {
     String::from_utf8(model_name.to_vec()).unwrap_or("Unknown".to_string())
 }
 
-fn get_cpu_family() -> u32 {
+/// Returns the CPU family number.
+pub fn get_cpu_family() -> u32 {
     let mut eax: u32;
     let mut _ebx: u32;
     let mut _ecx: u32;
@@ -436,7 +482,8 @@ fn get_cpu_family() -> u32 {
     }
 }
 
-fn get_cpu_model() -> u32 {
+/// Returns the CPU model number.
+pub fn get_cpu_model() -> u32 {
     let mut eax: u32;
     let mut _ebx: u32;
     let mut _ecx: u32;
@@ -470,7 +517,8 @@ fn get_cpu_model() -> u32 {
     }
 }
 
-fn get_threads_per_core() -> u32 {
+/// Returns the number of threads per core.
+pub fn get_threads_per_core() -> u32 {
     let mut _eax: u32;
     let mut ebx: u32;
     let mut _ecx: u32;
@@ -552,7 +600,8 @@ fn get_threads_per_core() -> u32 {
     1
 }
 
-fn get_cores_per_socket() -> u32 {
+/// Returns the number of cores per socket.
+pub fn get_cores_per_socket() -> u32 {
     let mut _eax: u32;
     let mut ebx: u32;
     let mut _ecx: u32;
@@ -581,7 +630,8 @@ fn get_cores_per_socket() -> u32 {
     fix_result(ebx)
 }
 
-fn get_sockets() -> u32 {
+/// Returns the number of sockets detected.
+pub fn get_sockets() -> u32 {
     let mut _eax: u32;
     let mut ebx: u32;
     let mut _ecx: u32;
@@ -610,7 +660,8 @@ fn get_sockets() -> u32 {
     fix_result(ebx)
 }
 
-fn fix_result(n: u32) -> u32 {
+/// Helper function to fix the result for certain topology queries.
+pub fn fix_result(n: u32) -> u32 {
     let mut c = 1;
     let mut n = n;
 
@@ -622,7 +673,8 @@ fn fix_result(n: u32) -> u32 {
     n ^ c
 }
 
-fn get_stepping() -> u32 {
+/// Returns the CPU stepping value.
+pub fn get_stepping() -> u32 {
     let mut eax: u32;
     let mut _ebx: u32;
     let mut _ecx: u32;
@@ -646,7 +698,8 @@ fn get_stepping() -> u32 {
     }
 }
 
-fn get_boost_enabled() -> &'static str {
+/// Returns whether frequency boost is enabled ("enabled" or "disabled").
+pub fn get_boost_enabled() -> &'static str {
     let mut _eax: u32;
     let mut ebx: u32;
 
@@ -669,7 +722,8 @@ fn get_boost_enabled() -> &'static str {
     }
 }
 
-fn get_hybrid_flag() -> &'static str {
+/// Returns whether the CPU is hybrid ("hybrid" or "no").
+pub fn get_hybrid_flag() -> &'static str {
     unsafe {
         let edx: u32;
 
