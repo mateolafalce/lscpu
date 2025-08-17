@@ -146,7 +146,7 @@ impl core::fmt::Display for Cpu {
              Core(s) per socket:       {}\n\
              Socket(s):                {}\n\
              Stepping:                 {}\n\
-             Frequency boost:          {}\n
+             Frequency boost:          {}
             ",
             self.architecture,
             self.cpu_op_modes,
