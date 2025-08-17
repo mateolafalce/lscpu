@@ -39,7 +39,7 @@ lscpu
 
 Add this to your `Cargo.toml`:
 
-```toml
+```bash
 cargo add lscpu
 ```
 
@@ -51,28 +51,6 @@ Simply run the installed binary to get CPU information:
 
 ```bash
 $ lscpu
-Architecture:             x86_64
-CPU op-mode(s):           32-bit, 64-bit
-Address sizes:            48 bits physical, 48 bits virtual
-Byte Order:               Little Endian
-CPU(s):                   2
-On-line CPU(s) list:      0,1
-Vendor ID:                AuthenticAMD
-Model name:               AMD A4-4000 APU with Radeon(tm) HD Graphics    
-CPU family:               21
-Model:                    19
-Is hybrid:                no
-Thread(s) per core:       2
-Core(s) per socket:       1
-Socket(s):                1
-Stepping:                 1
-Frequency boost:          enabled
-
-            
-mateo@debian:~/dev/lscpu$ cargo run
-   Compiling lscpu v1.0.8 (/home/mateo/dev/lscpu)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.35s
-     Running `target/debug/lscpu`
 Architecture:             x86_64
 CPU op-mode(s):           32-bit, 64-bit
 Address sizes:            48 bits physical, 48 bits virtual
